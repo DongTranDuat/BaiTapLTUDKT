@@ -10,3 +10,5 @@ os.environ["ANONYMIZED_TELEMETRY"] = "False"
 
 # Tắt log rác
 logging.getLogger().setLevel(logging.ERROR)
+
+print(">>> sitecustomize loaded")
