@@ -5,12 +5,12 @@ import logging
 import os
 from config import db_path, pdf_path, get_embedding_function
 import time
+import math
 
 
 logging.basicConfig(
     level=logging.INFO,
-    hien thi = (ngày giờ....)
-    #// -8
+    format="%(asctime)s %(levelname)s: %(message)s"
 )
 
 logger = logging.getLogger()
@@ -34,9 +34,9 @@ def main():
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
         chunk_overlap=200
-    ) # // -8
+    )
 
-    so_mau_giay = text_splitter.split_documents()
+    so_mau_giay = text_splitter.split_documents(so_trang_da_doc)
 
     logger.info(f"Split done {len(so_mau_giay)} mau giay.")
 
@@ -51,37 +51,73 @@ def main():
     )
 
     #chuan bi data
-    def # -8
-
-    toan_chu = [doc in so_mau_giay] # lay toan chu 
+    toan_chu = [doc1.page_content for doc1 in so_mau_giay] # lay toan chu 
 
     ho_so = []
 
     ids = []
 
-    for i, doc enumerate(so_mau_giay): # dem tung mau giay goi la doc so i(0->...) va ghi tung ho so va ids vao
-    #//-8
-        trang = doc.metadata.get("page", "no_biet")
+    for i, doc2 in enumerate(so_mau_giay): # dem tung mau giay goi la doc so i(0->...) va ghi tung ho so va ids vao
+        trang = doc2.metadata.get("page", "no_biet")
 
-    ho_so.append(
+        ho_so.append(
             "trang": trang,
             "dong": i
         )
-    ids.append(f"trang_{trang}_dong_{i}")
+
+        ids.append(f"trang_{trang}_dong_{i}")
 
     # xep 20 mau thanh 1 lo
 
     size_lo = 20
+    tong_lo = len(toan_chu)
 
-    tong_so_lo = len(toan_chu)
+    #may dong lo
+    def may_dong_lo(tong_chu, size_lo):
+        for i in range(0, len(tong_chu), size_lo):
+            yield tong_chu[i:i+size_lo]
+    
+    so_lo_dong_duoc = math.ceil(tong_lo / size_lo)
 
-    list.#dua ra list -8
-    for so_lo, (toan_chu_so, trang_so, ids_so) in range:
-        #list 
+    for i in enumerate(size_lo, (toan_chu_so, ho_so_so, ids_so),
+        zip(
+            may_dong_lo(toan_chu, size_lo),
+            may_dong_lo(ho_so, size_lo),
+            may_dong_lo(ids_so, size_lo)
+        ),
+        start=1
+    ):
+        max_tries = 3
 
-    #-8
-    #-8
-    #-8
+        if attempt > max_tries:
+
+            try:
+
+                    logger.info(f"Nạp {i}/{so_lo_dong_duoc}")
+
+                    vectorstore.add_texts(
+                        texts=toan_chu_so,
+                        metadatas=ho_so_so,
+                        ids=ids_so
+                    )
+
+                    time.sleep(1)
+            
+            except Exception as e:
+
+                if "429" in str(e):
+                    ngoi_cho = 5
+
+                    time.sleep(5 * 2 ** (attempt - 1))
+
+                    logger.info(f"Hoi mana {ngoi_cho}s roi lam tiep.")
+                
+                else:
+                    logger.info(f"Loi {e}.")
+        
+
+    logger.info("done.")
+
 
 if __name__ == "__main__":
     main()
