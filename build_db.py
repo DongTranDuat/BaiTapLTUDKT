@@ -60,10 +60,10 @@ def main():
     for i, doc2 in enumerate(so_mau_giay): # dem tung mau giay goi la doc so i(0->...) va ghi tung ho so va ids vao
         trang = doc2.metadata.get("page", "no_biet")
 
-        ho_so.append(
+        ho_so.append({
             "trang": trang,
             "dong": i
-        )
+        })
 
         ids.append(f"trang_{trang}_dong_{i}")
 
@@ -79,7 +79,7 @@ def main():
     
     so_lo_dong_duoc = math.ceil(tong_lo / size_lo)
 
-    for i in enumerate(size_lo, (toan_chu_so, ho_so_so, ids_so),
+    for lo_so, (toan_chu_so, ho_so_so, ids_so) in enumerate(
         zip(
             may_dong_lo(toan_chu, size_lo),
             may_dong_lo(ho_so, size_lo),
@@ -89,34 +89,44 @@ def main():
     ):
         max_tries = 3
 
-        if attempt > max_tries:
+        for attempt in range(max_tries):
 
             try:
 
-                    logger.info(f"Nạp {i}/{so_lo_dong_duoc}")
+                logger.info(f"Nạp {lo_so}/{so_lo_dong_duoc}")
 
-                    vectorstore.add_texts(
-                        texts=toan_chu_so,
-                        metadatas=ho_so_so,
-                        ids=ids_so
-                    )
+                vectorstore.add_texts(
+                    texts=toan_chu_so,
+                    metadatas=ho_so_so,
+                    ids=ids_so
+                )
 
-                    time.sleep(1)
+                time.sleep(1)
+
+                break
             
             except Exception as e:
 
                 if "429" in str(e):
-                    ngoi_cho = 5
+                    ngoi_cho = 5 * 2 ** (attempt - 1)
 
-                    time.sleep(5 * 2 ** (attempt - 1))
+                    logger.warning(f"Hoi mana {ngoi_cho}s roi lam tiep.")
 
-                    logger.info(f"Hoi mana {ngoi_cho}s roi lam tiep.")
+                    time.sleep(ngoi_cho)
                 
                 else:
-                    logger.info(f"Loi {e}.")
+                    logger.error(f"Loi {e}.")
+                    break
         
+    try:
+        dem = vectorstore._collection.count()
 
-    logger.info("done.")
+        logger.info(f"Tổng vector hiện tại trong DB: {dem}")
+
+    except:
+        logger.warning("Khong doc duoc so dem.")
+
+    logger.info("Done.")
 
 
 if __name__ == "__main__":
